@@ -5,4 +5,5 @@
 #### 팀장 : 정용희  
 #### 팀원 : 정용희 신유은 윤태권  
 
-# 1. Title: Create Gomoku AI Game with reconstruction function
+# 1. Title: 
+# Create Gomoku AI Game with reconstruction function
