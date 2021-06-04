@@ -17,14 +17,16 @@ class MyApp(QWidget):
 
     def initUI(self):
 
-        load_model_path = 'model/model_v1.ckpt'
+        load_model_path = 'model/model_black_v2.ckpt'
         # 바둑판 크기
         board_size = 15
         self.game_end = 0
         self.board_size = board_size
         self.board = np.zeros([board_size,board_size])
         self.board_history = np.zeros([board_size,board_size])
-        self.cnt = 1
+        self.cnt = 2
+        self.board[8, 8] = 1
+        self.board_history[8, 8] = 1
 
 
         time_now = time.gmtime(time.time())
@@ -42,12 +44,18 @@ class MyApp(QWidget):
         black_ball = cv2.imread('source/black.png')
         self.black_ball = cv2.cvtColor(black_ball, cv2.COLOR_BGR2RGB)
 
+        ball_size = self.white_ball.shape[0]
+        xy_1 = 56 * 8 - round(56 / 2) + 10
+
+        self.board_cv2[xy_1:xy_1 + ball_size, xy_1:xy_1 + ball_size] = self.black_ball
+
+
         # numpy to QImage
         height, width, channel = self.board_cv2.shape
         bytesPerLine = 3 * width
         qImg_board = QImage(self.board_cv2.data, width, height, bytesPerLine, QImage.Format_RGB888)
 
-        self.player = 1 # 1: 흑  / 2: 백
+        self.player = 2 # 1: 흑  / 2: 백
         x = 0
         y = 0
 
@@ -134,6 +142,7 @@ class MyApp(QWidget):
         step_size = 56
         off_set = 10
 
+
         # 판의 마지막 모서리에는 돌을 두지 못하게 한다.
         if pos_x < step_size/2+off_set+1 or pos_y < step_size/2+off_set+1:
             print('그곳에는 둘 수 없습니다')
@@ -201,9 +210,9 @@ class MyApp(QWidget):
         y = e.y()
         if self.game_end == 0:
 
-            # 흑돌 사람 게임 플레이
+            # 백돌 사람 게임 플레이
 
-            self.board_cv2 = self.game_play(self.board_cv2, self.black_ball, y, x, 1)
+            self.board_cv2 = self.game_play(self.board_cv2, self.white_ball, y, x, 2)
            
             save_name =  'result/' + str(self.cnt) + "board_black.png"
             save_name_w = 'result/' + str(self.cnt) + "board_white.png"
@@ -211,7 +220,7 @@ class MyApp(QWidget):
 
             
 
-            # 백돌 인공지능 게임 플레이
+            # 흑돌 인공지능 게임 플레이
             input_X = self.board.flatten()/2
             result = self.sess.run(self.logits, feed_dict={self.X: input_X[None,:]})
             result_mat = self.sigmoid(result).reshape([self.board_size,self.board_size])
@@ -243,7 +252,7 @@ class MyApp(QWidget):
                 result_mat, max_x, max_y = self.find_max(result_mat)
 
 
-            self.board[max_x,max_y] = 2 # 인공지능은 항상 2값 / 사람은 1값으로 표현
+            self.board[max_x,max_y] = 1 # 인공지능은 항상 1값 / 사람은 2값으로 표현
             self.board_history[max_x,max_y] = self.cnt
             self.cnt = self.cnt + 1
 
@@ -252,7 +261,7 @@ class MyApp(QWidget):
             off_set = 10
             x_step = step_size*(max_x+1)-round(step_size/2) + off_set
             y_step = step_size*(max_y+1)-round(step_size/2) + off_set
-            self.board_cv2[x_step:x_step+ball_size,y_step:y_step+ball_size] = self.white_ball
+            self.board_cv2[x_step:x_step+ball_size,y_step:y_step+ball_size] = self.black_ball
 
              
             save_image = cv2.resize(self.board_cv2, (500, 500), interpolation=cv2.INTER_CUBIC)

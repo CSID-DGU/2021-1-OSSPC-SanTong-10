@@ -38,7 +38,7 @@ training_epochs = 50
 batch_size = 100
 board_size = 15
 file_path = 'training_data/txt/' # 학습 기보 저장된 폴더
-save_file = 'model/model_v3.ckpt' # 모델 저장 폴더 / 파일명
+save_file = 'model/model_white_v2.ckpt' # 모델 저장 폴더 / 파일명
 
 ### 학습 데이터 저장 공간
 board_x_stack = []
@@ -112,7 +112,7 @@ optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
 # data load / augmentation
 df = pd.read_csv('tot_data_plus_result.csv')
 
-for i in range(10000): # 일단 10000개로 학습 바꿀 것 len(df)로
+for i in range(len(df)): # 일단 10000개로 학습 바꿀 것 len(df)로
     # read data
     board_data = np.array(df.iloc[i][1:-1])
     result = df.iloc[i][-1]
@@ -121,7 +121,8 @@ for i in range(10000): # 일단 10000개로 학습 바꿀 것 len(df)로
         print(i)
 
     # data augmentation
-    # 백이 이긴 경우만 train한다
+    # 흑이 이긴 경우만 train한다
+    ##############  result   0:백승 1:흑승  ##############
     if result != 0:
         continue
 
