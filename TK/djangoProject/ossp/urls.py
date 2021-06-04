@@ -3,4 +3,8 @@ from . import views
 
 urlpatterns = [
     path('', views.index, name='index'),
+    path('gr/', views.game_records),
+    path('test/', views.insertTest),
+    path('json/', views.testJson),
+
 ]
