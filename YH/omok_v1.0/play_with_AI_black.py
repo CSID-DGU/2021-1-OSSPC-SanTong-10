@@ -17,7 +17,7 @@ class MyApp(QWidget):
 
     def initUI(self):
 
-        load_model_path = 'model/model_black_v2.ckpt'
+        load_model_path = 'model/model_v1.ckpt'
         # 바둑판 크기
         board_size = 15
         self.game_end = 0
@@ -25,8 +25,8 @@ class MyApp(QWidget):
         self.board = np.zeros([board_size,board_size])
         self.board_history = np.zeros([board_size,board_size])
         self.cnt = 2
-        self.board[8, 8] = 1
-        self.board_history[8, 8] = 1
+        self.board[7, 7] = 1
+        self.board_history[7, 7] = 1
 
 
         time_now = time.gmtime(time.time())

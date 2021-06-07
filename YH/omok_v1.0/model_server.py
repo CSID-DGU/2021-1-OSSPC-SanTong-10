@@ -1,7 +1,7 @@
 import tensorflow as tf
 import numpy as np
 
-load_model_path = 'model/model_v2.ckpt'
+load_model_path = 'model/model_v1.ckpt'
 board_size = 15
 
 X = tf.placeholder(tf.float32, [None, board_size*board_size])
@@ -68,28 +68,48 @@ saver.restore(sess, load_model_path)
 def sigmoid(x):
     return 1 / (1 + np.exp(-x))
 
-def model_result(input_X):
-    # input_x의 shape = (255,)의 벡터 형태   [자신이 둔 착수는 0.5, 타인이 둔 착수는 1.0 으로 표기된]
+def model_result(board):
+    # input_x의 shape = (255,)의 벡터 형태   [자신이 둔 착수는 2, 타인이 둔 착수는 1 으로 표기된]
+    input_X = board.flatten() / 2
+
     result = sess.run(logits, feed_dict={X: input_X[None, :]})
     result_mat = sigmoid(result).reshape([board_size, board_size])
-    return result_mat
 
-input_X = np.array([0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-           0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-           0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-           0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-           0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-           0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-           0,0,0,0,0,0,0.5,1.0,0,0,0,0,0,0,
-           0,0,0,0,0,0,0.5,1.0,0,0,0,0,0,0,
-           0,0,0,0,0,0,0,1.0,0,0,0,0,0,0,
-           0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-           0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-           0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-           0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-           0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-           0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-            0,0,0,0,0,0,0,0,0,0,0,0,0,0,0])
+    print('result_mat:', np.round(result_mat, 4))
+    mat_flat = result_mat.flatten()
+    sort_mat = mat_flat.argsort()
 
-result_mat = model_result(input_X)
-print('result_mat:', np.round(result_mat, 2))
+    print(sort_mat[-10:])
+    print(np.round(mat_flat[sort_mat][-10:], 5))
+
+    return sort_mat[-10:], np.round(mat_flat[sort_mat][-10:], 4)
+
+board = np.array(
+    [[0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.],
+    [0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.],
+    [0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.],
+    [0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.],
+    [0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.],
+    [0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.],
+    [0.,0.,0.,0.,0.,0.,2.,2.,0.,0.,0.,0.,0.,0.,0.],
+    [0.,0.,0.,0.,0.,0.,2.,1.,0.,0.,0.,0.,0.,0.,0.],
+    [0.,0.,0.,0.,0.,0.,0.,0.,1.,0.,0.,0.,0.,0.,0.],
+    [0.,0.,0.,0.,0.,0.,0.,0.,0.,1.,0.,0.,0.,0.,0.],
+    [0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,1.,0.,0.,0.,0.],
+    [0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.],
+    [0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.],
+    [0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.],
+    [0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.,0.]]
+)
+
+
+top_10_idx, top_10_perc = model_result(board)
+
+pick_xy = []
+for i in top_10_idx:
+    row = (i // 15)
+    col = (i % 15)
+    pick_xy.append((row, col))
+
+print('Top10 좌표: ', pick_xy)
+print('Top10 확률: ', top_10_perc)

@@ -2,6 +2,7 @@ import tensorflow as tf
 import random
 import os
 import numpy as np
+import pandas as pd
 
 
 def readfile(file_name_path):
@@ -67,7 +68,7 @@ training_epochs = 100
 batch_size = 100
 board_size = 15
 file_path = 'training_data/txt/v2_txt' # 학습 기보 저장된 폴더
-save_file = 'model/model_v1.ckpt' # 모델 저장 폴더 / 파일명
+save_file = 'model/model_final.ckpt' # 모델 저장 폴더 / 파일명
 
 ### 학습 데이터 저장 공간
 board_x_stack = []
@@ -139,93 +140,88 @@ optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
  
 
 # data load / augmentation
-files = os.listdir(file_path)
+df = pd.read_csv('tot_data_plus_result.csv')
 
-for file_name in files:
-    file_name_path = os.path.join(file_path,file_name)
-    
+for i in range(len(df)):  # 일단 10000개로 학습 바꿀 것 len(df)로
     # read data
-    board_data = readfile(file_name_path)
-    # data augmentation
+    board_data = np.array(df.iloc[i][1:-1])
+    result = df.iloc[i][-1]
+
+    if i % 500 == 0:
+        print(i)
+
     board_stack = data_aug(board_data)
 
     for board_i in range(len(board_stack)):
         board_vec = board_stack[board_i].flatten()
         max_step = np.max(board_vec)
 
-        for data_cnt in range(1,int(round(max_step*0.8))):
-            board_x = np.zeros([board_size*board_size],dtype='f')
-            board_y = np.zeros([board_size*board_size],dtype='f')
-            
+        for data_cnt in range(1, int(round(max_step))):
+            board_x = np.zeros([board_size * board_size], dtype='f')
+            board_y = np.zeros([board_size * board_size], dtype='f')
+
             for i in range(len(board_vec)):
 
                 ############# 흑/백 학습 데이터 생성
                 # 학습시에는 어느턴이든 항상 자기 돌은 1 상대돌은 0.5 으로 표현하게 한다
-                if data_cnt%2 !=0:
-                    if board_vec[i] > 0 and board_vec[i] <= data_cnt: # 배경 skip
-                        if board_vec[i]%2 != 0:
+                if data_cnt % 2 != 0:
+                    if board_vec[i] > 0 and board_vec[i] <= data_cnt:  # 배경 skip
+                        if board_vec[i] % 2 != 0:
                             # 흑
                             board_x[i] = 1
                         else:
                             board_x[i] = 2
 
-                    if board_vec[i] == data_cnt + 1: 
+                    if board_vec[i] == data_cnt + 1:
                         board_y[i] = 1
 
                 else:
-                    if board_vec[i] > 0 and board_vec[i] <= data_cnt: # 배경 skip
-                        if board_vec[i]%2 == 0:
+                    if board_vec[i] > 0 and board_vec[i] <= data_cnt:  # 배경 skip
+                        if board_vec[i] % 2 == 0:
                             # 백
                             board_x[i] = 1
                         else:
                             board_x[i] = 2
 
-                    if board_vec[i] == data_cnt + 1: 
-                        board_y[i] = 1     
-                
+                    if board_vec[i] == data_cnt + 1:
+                        board_y[i] = 1
+
             if (np.sum(board_y)) != 1:
-            	print('학습데이터에 문제가 있습니다.')
-            
-            board_x_stack.append(board_x/2)
+                print('학습데이터에 문제가 있습니다.')
+
+            board_x_stack.append(board_x / 2)
             board_y_stack.append(board_y)
 
-
-total_batch = (round(len(board_x_stack)/100)) - 1
+total_batch = (round(len(board_x_stack) / 100)) - 1
 print('학습데이터 생성이 완료 되었습니다: ', total_batch)
 
 ######### 학습 시작
 sess = tf.Session(config=tf.ConfigProto(log_device_placement=True))
 sess.run(tf.global_variables_initializer())
- 
+
 print("Learning started, It takes sometime.")
 for epoch in range(training_epochs):
     avg_cost = 0
-    
-    batch_xs = np.zeros([batch_size,board_size*board_size],dtype='f')
-    batch_ys = np.zeros([batch_size,board_size*board_size],dtype='f')
-    
- 
-    for i in range(total_batch):
-        
-        for j in range(batch_size):
 
-            batch_xs[j,:] = board_x_stack[j+i*batch_size]
-            batch_ys[j,:] = board_y_stack[j+i*batch_size]
-        
-        
+    batch_xs = np.zeros([batch_size, board_size * board_size], dtype='f')
+    batch_ys = np.zeros([batch_size, board_size * board_size], dtype='f')
+
+    for i in range(total_batch):
+
+        for j in range(batch_size):
+            batch_xs[j, :] = board_x_stack[j + i * batch_size]
+            batch_ys[j, :] = board_y_stack[j + i * batch_size]
+
         feed_dict = {X: batch_xs, Y: batch_ys}
         c, _ = sess.run([cost, optimizer], feed_dict=feed_dict)
-        avg_cost += c/total_batch
- 
-    print('Epoch;', '%04d' % (epoch +1), 'cost =', '{:.9f}'.format(avg_cost))
- 
+        avg_cost += c / total_batch
+
+    print('Epoch;', '%04d' % (epoch + 1), 'cost =', '{:.9f}'.format(avg_cost))
+
 print('학습이 완료 되었습니다.')
-
-
 
 ######### 학습 모델 저장
 saver = tf.train.Saver()
 saver.save(sess, save_file)
-
 
 print('모델저장이 완료 되었습니다.')

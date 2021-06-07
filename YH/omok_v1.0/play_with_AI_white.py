@@ -212,10 +212,12 @@ class MyApp(QWidget):
             
 
             # 백돌 인공지능 게임 플레이
+            print(self.board)
+            print(type(self.board))
             input_X = self.board.flatten()/2
             print('input_x:',input_X)
             result = self.sess.run(self.logits, feed_dict={self.X: input_X[None,:]})
-            print('result:',result)
+            # print('result:',result)
             result_mat = self.sigmoid(result).reshape([self.board_size,self.board_size])
             print('result_mat:',np.round(result_mat, 4))
 
