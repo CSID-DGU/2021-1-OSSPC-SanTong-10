@@ -9,7 +9,10 @@ class GameRecords(models.Model):
     y = models.IntegerField(blank=True, null=True)
     is_finish = models.IntegerField(blank=True, null=True)
     stone_status = models.IntegerField(blank=True, null=True)
+    unallowed_list = models.CharField(max_length=255, blank=True, null=True)
+    review_list = models.CharField(max_length=255, blank=True, null=True)
     created_datetime = models.DateTimeField(blank=True, null=True)
+
 
     class Meta:
         managed = False

@@ -8,12 +8,10 @@ import json
 
 
 
-
 # return String
 def index(request):
     # 모델 활용
     return HttpResponse("Hello, World. You're at the polls index.")
-
 
 # Read JSON Object
 def game_records(request):
@@ -23,7 +21,7 @@ def game_records(request):
 
 # Insert (* Important)
 def insertTest(request):
-    Test.objects.create(name="django")
+    Test.objects.create(name="test")
     # return render(request, 'index.html')
 
 
@@ -32,6 +30,12 @@ def testJson(request):
     if (request.method == 'POST') :
         jsonObject = json.loads(request.body)
         print(jsonObject)
+
+        a = GameRecords.objects.get(id=792)
+        print(a.review_list)
+        a.review_list = ['7&7&99', '8&8&92']
+        a.save()
+
     return JsonResponse({"result":"ok"}, status=200)
 
 
